@@ -13,30 +13,40 @@ data = np.array([
 
 # Encoding the dataset
 X = data[:,0:3]
-y = data[:,3]
+y = np.column_stack([data[:,3]=='Wine',data[:,3]=='Whiskey',data[:,3]=='Beer']).astype(int) # Using one-hot encoding since we are dealing with nominal variables
 n_labels = len(np.unique(y))
 
+'''
 # Converting string labels to numeric equivalent
 y[y=='Wine']=0
 y[y=='Whiskey']=1
 y[y=='Beer']=2
+''' # Deprecated in favour of one-hot encoding 
 
-y = np.array(y,dtype=int)
-
-convert = {0:'Wine',1:'Whiskey',2:'Beer'}
+#y = np.array(y,dtype=int)
 
 headings = {0:'Alcohol Content(%)',1:"Sugar(g/L)",2:"Color"}
 
 #print(X,y) #debug
 
+def int_to_onehot(index:int): #converting numbers like 0,1,2 to (1,0,0) (0,1,0) (0,0,1) for some simpler coding later
+    #print("index-->",index)
+    one_hotlabel = np.zeros(n_labels+1,dtype=int)
+    #print(one_hotlabel)
+    one_hotlabel[index]=1
+    return one_hotlabel
+
+def onehot_to_label(onehot): #converting a one-hot representation back to a string label
+    return np.flip(np.unique(data[:,3]))[np.where(onehot==1)][0]
+
 # Gini Impurity function
 def gini_impurity(X,y,fi,thr): #fi ---> feature index, thr ---> threshold of a node
-    quan = np.zeros((2,n_labels), dtype=int) #storing no. of each type of feature for calculating probabilities #len(np.unique(y))
+    quan = np.zeros((2,n_labels+1), dtype=int) #storing no. of each type of feature for calculating probabilities #len(np.unique(y))
     for i in range(len(X)):
         if X[i,fi]<=thr:
-            quan[0,y[i]]+=1
+            quan[0,np.arange(n_labels+1)[np.where(y[i]==1)][0]]+=1
         else:
-            quan[1,y[i]]+=1
+            quan[1,np.arange(n_labels+1)[np.where(y[i]==1)][0]]+=1
     #print(quan) #debug
 
     #first, calculating the gini impurity for the node itself
@@ -53,21 +63,27 @@ def gini_impurity(X,y,fi,thr): #fi ---> feature index, thr ---> threshold of a n
     gain = gini-wg
 
     if gain<1e-9:
-        dummy=np.arange(3, dtype=int)
-        label = dummy[np.where(np.sum(quan,axis=0)!=0)][0] #getting the label number when gain = 0 (leaf node scenario)
+        dummy=np.arange(n_labels+1, dtype=int)
+        #print(quan)
+        #print(np.sum(quan,axis=0))
+        index = dummy[np.where(np.sum(quan,axis=0)!=0)][0]
+        #print(index)
+        label = int_to_onehot(index) #getting the label number when gain = 0 (leaf node scenario)
+        #print("type-->",type(label))
+        #print(label)
         return gain,label
 
     return gain,None #using None as a dummy of sorts
     #print(gain) #debug
 
 # Entropy function
-def entropy(X,y,fi,thr): #fi ---> feature index, thr ---> threshold of a node
-    quan = np.zeros((2,3), dtype=int) #storing no. of each type of feature for calculating probabilities #len(np.unique(y))
+def entropy(X,y,fi,thr): #fi ---> feature index, thr ---> threshold of a nodeprint("type-->",type(label))
+    quan = np.zeros((2,n_labels+1), dtype=int) #storing no. of each type of feature for calculating probabilities #len(np.unique(y))
     for i in range(len(X)):
         if X[i,fi]<=thr:
-            quan[0,y[i]]+=1
+            quan[0,np.arange(n_labels+1)[np.where(y[i]==1)][0]]+=1
         else:
-            quan[1,y[i]]+=1
+            quan[1,np.arange(n_labels+1)[np.where(y[i]==1)][0]]+=1
     #print(quan) #debug
 
     #first, calculating the entropy impurity for the node itself
@@ -86,10 +102,14 @@ def entropy(X,y,fi,thr): #fi ---> feature index, thr ---> threshold of a node
 
     #third, calculating the entropy gain
     gain = ent-we
-
     if gain<1e-9:
-        dummy=np.arange(3, dtype=int)
-        label = dummy[np.where(np.sum(quan,axis=0)!=0)][0] #getting the label number when gain = 0 (leaf node scenario)
+        dummy=np.arange(n_labels+1, dtype=int)
+        #print(quan)
+        #print(np.sum(quan,axis=0))
+        index = dummy[np.where(np.sum(quan,axis=0)!=0)][0]
+        #print(index)
+        label = int_to_onehot(index) #getting the label number when gain = 0 (leaf node scenario)
+        #print(label)
         return gain,label
     #print(gain) #debug
     return gain,None #using None as a dummy of sorts
@@ -145,9 +165,9 @@ class Node():
             self.value = res[0]
             #print("Hey leaf here at depth", self.depth,"with label number",self.value) #debug
         elif self.depth==self.max_depth: #implementing max_depth parameter
-            self.value = np.bincount(y).argmax()
+            self.value = int_to_onehot(np.sum(y,axis=0).argmax())
         elif len(X)<2: #implementing lower limit on no. of samples
-            self.value = np.bincount(y).argmax()
+            self.value = int_to_onehot(np.sum(y,axis=0).argmax())
         else:
             self.feature_index,self.threshold = res
             self.left = Node(self.depth+1, self.max_depth)
@@ -180,11 +200,11 @@ class Node():
             print('     '*self.depth + "|"+'---'*self.depth+'>',text2)
             self.right.tree_display()
         else:
-            print('     '*self.depth + "|"+'---'*self.depth+'>',convert[self.value])
+            print('     '*self.depth + "|"+'---'*self.depth+'>',onehot_to_label(self.value))
 
 
 
-Root_Node = Node(0,2,mode=False)
+Root_Node = Node(depth=0,max_depth=2,mode=False)
 
 Root_Node.tree_building(X,y)
 
@@ -200,9 +220,10 @@ X_test = np.array([
 ])
 
 
-for x in X_test:
+for x in X:
     res = Root_Node.tree_predict(x)
-    print(x,"--->",convert[res])
+    #print(res)
+    print(x,"--->",onehot_to_label(res))
 
 
 #gini_impurity(X,y,0,10) #debug
