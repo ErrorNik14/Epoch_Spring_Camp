@@ -106,7 +106,7 @@ def best_split(X,y, mode=False):
         incr = 0.1 if type(thr)==float else 1
         while(thr <= np.max(X[:,fi])):
             g_calc,label = gini_impurity(X,y,fi,thr) if not mode else entropy(X,y,fi,thr) #switching b/w entropy and gini impurity
-            #print("Test--->",fi,thr,g_calc,label)
+            #print("Test--->",fi,thr,g_calc,label) #debug
             if g_calc >= g:
                 g=g_calc
                 FI=fi
@@ -184,7 +184,7 @@ class Node():
 
 
 
-Root_Node = Node(0,1,mode=True)
+Root_Node = Node(0,2,mode=False)
 
 Root_Node.tree_building(X,y)
 
