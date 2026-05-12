@@ -13,15 +13,18 @@ I applied data augmentation to the training audio, feeling that the 1440 audio s
 
 I used the given below architecture, to be precise.
 
-
+<img width="1000" height="750" alt="cnn architecture_" src="https://github.com/user-attachments/assets/b5a0e138-baa8-419f-afba-9d102bc7fc55" />
 
 My training/validation plot looked like this
 
+<img width="800" height="500" alt="epoch_vs_loss_cnn" src="https://github.com/user-attachments/assets/043a1f70-18c4-409d-9afe-3172beec624e" />
 
 
 It is apparent how after the 60th epoch or so, overfitting started occurring. However, the end result was calculated using only the best set of weights.
 
 The resulting confusion matrix is as given below.
+
+<img width="800" height="600" alt="confusion_matrix_cnn" src="https://github.com/user-attachments/assets/4227813e-32e3-4673-92fd-feaeecf9bf86" />
 
 
 
@@ -33,13 +36,15 @@ Knowing the audio clips were short, I decided to use GRU following the embedding
 
 This is the architecture of the model.
 
-
+<img width="1000" height="750" alt="rnn_architecture" src="https://github.com/user-attachments/assets/3fa78a0e-6c2a-4c04-88d6-374175a6c4f3" />
 
 My training/validation plot,
 
-
+<img width="800" height="500" alt="epoch_vs_loss_rnn" src="https://github.com/user-attachments/assets/ef320fe5-86bb-4a07-983a-3f78af1333ed" />
 
 And my confusion matrix.
+
+<img width="800" height="600" alt="confusion_matrix_rnn" src="https://github.com/user-attachments/assets/d51d3c4a-816a-4689-9b52-aef79aed02a2" />
 
 
 
@@ -55,11 +60,19 @@ I decided against data augmentation here, unlike in my CNN, because I was cautio
 
 This is the architecture of the model.
 
+<img width="1000" height="750" alt="crnn_architecture" src="https://github.com/user-attachments/assets/7ade63f7-5f32-4da1-9926-47e3ae6a48cc" />
 
 
 My training/validation plot,
 
+<img width="800" height="500" alt="epoch_vs_loss_crnn" src="https://github.com/user-attachments/assets/c25502f0-91b5-4f52-8ec1-b4e3715b79d7" />
+
+
 And my confusion matrix. 
+
+<img width="800" height="600" alt="confusion_matrix_crnn" src="https://github.com/user-attachments/assets/5d3a2fce-7f0a-494d-8702-9b849a2d52ce" />
+
+
 
 This model performed poorly in neutral, happy, and sad emotions. But was almost perfect for calm. It's difficult to comment the exact reasons behind this, and it may have been due to interference due to the poor-performing RNN model.
 
@@ -67,10 +80,12 @@ For all three models, I used the EarlyStopping callback, with restore_best_weigh
 
 I obtained the following metrics across all three models. LR=5e-4, EPOCHS=300 to 600
 
-Model name	              Accuracy (%)	      F1 Score
-CNN Model	                55.56	              0.5460
-RNN Model	                12.85	              0.0665
-CRNN Model(Multi-model)	  56.94	              0.5344
+| Model name                | Accuracy (%) | F1 Score |
+| ------------------------- | ------------ | -------- |
+| CNN Model                 | 55.56        | 0.5460   |
+| RNN Model                 | 12.85        | 0.0665   |
+| CRNN Model                | 56.94        | 0.5344   |
+
 (Note, all of this run using WSL2, to take advantage of GPU computing, which is how I managed to get a lot of epochs in.)
 
 In conclusion, I believe with some further regularisation work, the CNN model could have out performed the CRNN model. It displayed a better spread of accuracies than the CRNN model.
